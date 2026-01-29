@@ -91,9 +91,9 @@ const App: React.FC = () => {
 
         {/* Основной контент */}
         {viewMode === 'map' ? (
-          <div className="flex gap-6">
+          <div className="flex gap-6" style={{ height: '600px' }}>
             {/* Карта */}
-            <div className="flex-1">
+            <div className="flex-1 h-full">
               <RussiaMap
                 representatives={representatives}
                 onRegionClick={handleRegionClick}
@@ -105,8 +105,8 @@ const App: React.FC = () => {
             </div>
 
             {/* Боковая панель */}
-            <div className="w-80 flex-shrink-0">
-              <div className="bg-white rounded-3xl p-6 border border-slate-100 h-full min-h-[400px]">
+            <div className="w-80 flex-shrink-0 h-full">
+              <div className="bg-white rounded-3xl p-6 border border-slate-100 h-full overflow-hidden flex flex-col">
                 <ContactPanel
                   selectedRegionId={selectedRegionId}
                   representatives={representatives}

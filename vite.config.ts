@@ -18,6 +18,10 @@ export default defineConfig({
           }
           return assetInfo.name || 'assets/[name]-[hash][extname]';
         },
+        // IIFE формат для изоляции от глобальных переменных Битрикс
+        format: 'iife',
+        // Имя глобальной переменной (не конфликтует с Битрикс)
+        name: 'LeadcoreMap',
       },
     },
     // Минификация

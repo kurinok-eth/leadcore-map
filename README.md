@@ -2,6 +2,14 @@
 
 React-компонент интерактивной карты представителей компании по регионам РФ для 1С-Битрикс. Использует SVG + GeoJSON для отображения границ регионов без зависимости от внешних API.
 
+## 📚 Документация
+
+- **[SETUP_CHECKLIST.md](SETUP_CHECKLIST.md)** — чек-лист установки и проверки (начните отсюда!)
+- **[BITRIX_ADMIN_GUIDE.md](BITRIX_ADMIN_GUIDE.md)** — инструкция для администратора Битрикс
+- **[INTEGRATION_GUIDE.md](INTEGRATION_GUIDE.md)** — руководство по интеграции для разработчика
+- **[CLAUDE.md](CLAUDE.md)** — техническое руководство для Claude Code
+- **[bitrix-component-example/](bitrix-component-example/)** — примеры файлов компонента
+
 ## Технологический стек
 
 - React 18+ / TypeScript
@@ -18,6 +26,22 @@ npm run dev        # localhost:5173
 npm run build      # сборка в dist/
 npx tsc --noEmit   # проверка типов
 ```
+
+## ⚠️ Важно перед установкой
+
+**Проверьте символьные коды свойств инфоблока!**
+
+Для работы компонента в инфоблоке **обязательно** должны быть свойства с **точными** символьными кодами:
+
+- `REGION_ID` — ID региона или федерального округа
+- `PHONE` — Телефон
+- `EMAIL` — Email
+- `POSITION` — Должность
+
+**Неправильно:** `region_id`, `Region_Id`, `phone_number`
+**Правильно:** `REGION_ID`, `PHONE`, `EMAIL` (заглавные, с подчеркиваниями)
+
+Подробнее см. **[BITRIX_ADMIN_GUIDE.md](BITRIX_ADMIN_GUIDE.md)**
 
 ## Развёртывание на 1С-Битрикс
 
@@ -48,60 +72,44 @@ npm run build
 
 Фрагмент HTML — **без** `<!DOCTYPE>`, `<html>`, `<body>` обёрток, так как подключается внутрь существующей страницы.
 
+**Используйте готовый пример из `bitrix-component-example/template.php`:**
+
 ```php
-<?php
-if (!defined("B_PAGE_STARTED")) define("B_PAGE_STARTED", true);
-?>
+<?php if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED !== true) die(); ?>
+
 <!-- Стили компонента -->
-<link rel="stylesheet" href="<?= DOCUMENT_ROOT ?>local/components/custom/russia.map/templates/.default/style.css">
+<link rel="stylesheet" href="/local/components/custom/russia.map/templates/.default/style.css">
 
 <!-- Данные представителей из Битрикс -->
 <script>
-    window.bitrixMapData = <?= json_encode($arResult['REPRESENTATIVES'], JSON_UNESCAPED_UNICODE) ?>;
+    window.bitrixMapData = <?= json_encode($arResult['REPRESENTATIVES'], JSON_UNESCAPED_UNICODE | JSON_HEX_QUOT | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS) ?>;
+    window.bitrixMapConfig = {
+        isAdmin: <?= $USER->IsAdmin() ? 'true' : 'false' ?>
+    };
 </script>
 
 <!-- Контейнер компонента -->
 <div id="russia-map-root"></div>
 
 <!-- Скрипт карты -->
-<script src="<?= DOCUMENT_ROOT ?>local/components/custom/russia.map/templates/.default/script.js"></script>
+<script src="/local/components/custom/russia.map/templates/.default/script.js"></script>
 ```
 
 ### 4. component.php
 
-```php
-<?php
-if (!defined("B_PAGE_STARTED")) define("B_PAGE_STARTED", true);
+**Используйте готовый пример из `bitrix-component-example/component.php`:**
 
-// Получение представителей из инфоблока или другого источника
-$arRepresentatives = [];
+Файл включает:
+- Загрузку модуля инфоблоков
+- Получение элементов с правильными символьными кодами свойств
+- Обработку множественных округов (разделение через запятую)
+- Формирование массива в нужном формате для React
 
-// Например, из инфоблока IBLOCK_ID = 5:
-$arFilter = ["IBLOCK_ID" => 5, "ACTIVE" => "Y"];
-$res = CIBlockElement::GetList(null, $arFilter, false, false, [
-    "ID", "NAME",
-    "PROPERTY_PHONE_VALUE",
-    "PROPERTY_EMAIL_VALUE",
-    "PROPERTY_REGION_ID_VALUE",
-    "PROPERTY_ACTIVITY_VALUE"
-]);
+**Критически важно:**
+1. Указать правильный `$iblockId`
+2. Убедиться, что символьные коды свойств — `REGION_ID`, `PHONE`, `EMAIL`, `POSITION`
 
-while ($arItem = $res->Fetch()) {
-    $arRepresentatives[] = [
-        "id"        => intval($arItem["ID"]),
-        "name"      => $arItem["NAME"],
-        "position"  => $arItem["PROPERTY_POSITION_VALUE"] ?? "",
-        "phone"     => $arItem["PROPERTY_PHONE_VALUE"] ?? "",
-        "email"     => $arItem["PROPERTY_EMAIL_VALUE"] ?? "",
-        "regionId"  => $arItem["PROPERTY_REGION_ID_VALUE"] ?? "",
-        "activity"  => explode(",", $arItem["PROPERTY_ACTIVITY_VALUE"] ?? ""),
-    ];
-}
-
-$arResult = ["REPRESENTATIVES" => $arRepresentatives];
-
-include_once($_SERVER["DOCUMENT_ROOT"] . "/local/components/custom/russia.map/templates/.default/template.php");
-```
+Подробнее см. **[INTEGRATION_GUIDE.md](INTEGRATION_GUIDE.md)**
 
 ### 5. Формат данных представителей
 

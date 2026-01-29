@@ -1,43 +1,83 @@
 import React from 'react';
 import type { Representative } from '../types';
-import { getInitials } from '../utils';
+import { getInitials, findRegionById } from '../utils';
+import { FEDERAL_DISTRICTS } from '../constants';
 
 interface RepresentativeCardProps {
   representative: Representative;
+  showRegion?: boolean;
 }
 
-const RepresentativeCard: React.FC<RepresentativeCardProps> = ({ representative: rep }) => (
-  <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
-    {/* Аватар и имя */}
-    <div className="flex items-center gap-3 mb-4">
-      <div className="w-12 h-12 rounded-xl bg-[#111217] text-white flex items-center justify-center font-bold text-sm flex-shrink-0">
-        {getInitials(rep.name)}
-      </div>
-      <div className="font-semibold text-slate-900 text-sm leading-tight truncate">
-        {rep.name}
-      </div>
-    </div>
+// Получить название региона/округа по ID
+function getRegionName(regionId: string): string {
+  // Проверяем, это федеральный округ?
+  const district = FEDERAL_DISTRICTS.find(d => d.id === regionId);
+  if (district) return district.name;
 
-    {/* Контакты */}
-    <div className="space-y-2 text-sm">
-      {rep.phone && (
-        <a
-          href={`tel:${rep.phone.replace(/[^\d+]/g, '')}`}
-          className="block text-slate-600 hover:text-slate-900 transition-colors"
-        >
-          {rep.phone}
-        </a>
+  // Иначе ищем регион
+  const region = findRegionById(regionId);
+  return region ? region.name : regionId;
+}
+
+const RepresentativeCard: React.FC<RepresentativeCardProps> = ({ representative: rep, showRegion = false }) => {
+  // Получаем названия регионов
+  const regionIds = Array.isArray(rep.regionId) ? rep.regionId : [rep.regionId];
+  const regionNames = regionIds.map(getRegionName);
+
+  return (
+    <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
+      {/* Аватар и имя */}
+      <div className="flex items-start gap-3 mb-4">
+        <div className="w-12 h-12 rounded-xl bg-[#111217] text-white flex items-center justify-center font-bold text-sm flex-shrink-0">
+          {getInitials(rep.name)}
+        </div>
+        <div className="font-semibold text-slate-900 text-sm leading-tight break-words min-w-0">
+          {rep.name}
+        </div>
+      </div>
+
+      {/* Регион (только если showRegion=true) */}
+      {showRegion && regionNames.length > 0 && (
+        <div className="text-xs text-slate-500 mb-3">
+          {regionNames.join(', ')}
+        </div>
       )}
-      {rep.email && (
-        <a
-          href={`mailto:${rep.email}`}
-          className="block text-slate-500 hover:text-slate-900 truncate transition-colors"
-        >
-          {rep.email}
-        </a>
+
+      {/* Контакты */}
+      <div className="space-y-2 text-sm">
+        {rep.phone && (
+          <a
+            href={`tel:${rep.phone.replace(/[^\d+]/g, '')}`}
+            className="block text-slate-600 hover:text-slate-900 transition-colors break-words"
+          >
+            {rep.phone}
+          </a>
+        )}
+        {rep.email && (
+          <a
+            href={`mailto:${rep.email}`}
+            className="block text-slate-500 hover:text-slate-900 transition-colors break-words"
+          >
+            {rep.email}
+          </a>
+        )}
+      </div>
+
+      {/* Направления (теги) */}
+      {showRegion && rep.activity && rep.activity.length > 0 && (
+        <div className="flex flex-wrap gap-1 mt-3">
+          {rep.activity.map((act, idx) => (
+            <span
+              key={idx}
+              className="px-2 py-0.5 bg-slate-100 text-slate-600 rounded-full text-[10px]"
+            >
+              {act}
+            </span>
+          ))}
+        </div>
       )}
     </div>
-  </div>
-);
+  );
+};
 
 export default RepresentativeCard;

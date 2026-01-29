@@ -24,7 +24,7 @@ const ListView: React.FC<ListViewProps> = ({ representatives }) => {
 
       const regionIds = Array.isArray(rep.regionId) ? rep.regionId : [rep.regionId];
 
-      // Поиск по названиям регионов
+      // Поиск по названиям регионов (прямое назначение)
       if (regionIds.some(id => {
         const region = RUSSIA_REGIONS.find(r => r.id === id);
         return region && region.name.toLowerCase().includes(query);
@@ -32,20 +32,42 @@ const ListView: React.FC<ListViewProps> = ({ representatives }) => {
         return true;
       }
 
-      // Поиск по названиям федеральных округов
+      // Поиск по федеральным округам (название и аббревиатура)
       if (regionIds.some(id => {
         // id может быть кодом округа напрямую (например, 'ЦФО')
         const district = FEDERAL_DISTRICTS.find(d => d.id === id);
-        if (district && district.name.toLowerCase().includes(query)) return true;
+        if (district) {
+          // Поиск по полному названию или аббревиатуре
+          if (district.name.toLowerCase().includes(query) ||
+              district.id.toLowerCase().includes(query)) {
+            return true;
+          }
+          // Если представитель назначен на округ — ищем по всем регионам этого округа
+          const regionsInDistrict = RUSSIA_REGIONS.filter(r => r.info === district.id);
+          if (regionsInDistrict.some(r => r.name.toLowerCase().includes(query))) {
+            return true;
+          }
+        }
 
         // или id — регион, ищем его округ
         const region = RUSSIA_REGIONS.find(r => r.id === id);
         if (region) {
           const parentDistrict = FEDERAL_DISTRICTS.find(d => d.id === region.info);
-          return parentDistrict && parentDistrict.name.toLowerCase().includes(query);
+          if (parentDistrict) {
+            // Поиск по полному названию или аббревиатуре округа
+            if (parentDistrict.name.toLowerCase().includes(query) ||
+                parentDistrict.id.toLowerCase().includes(query)) {
+              return true;
+            }
+          }
         }
         return false;
       })) {
+        return true;
+      }
+
+      // Поиск по направлениям деятельности
+      if (rep.activity?.some(act => act.toLowerCase().includes(query))) {
         return true;
       }
 
@@ -66,9 +88,9 @@ const ListView: React.FC<ListViewProps> = ({ representatives }) => {
 
       {/* Сетка карточек */}
       {filtered.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-2">
           {filtered.map(rep => (
-            <RepresentativeCard key={rep.id} representative={rep} />
+            <RepresentativeCard key={rep.id} representative={rep} showRegion />
           ))}
         </div>
       ) : (

@@ -32,17 +32,17 @@ const ContactPanel: React.FC<ContactPanelProps> = ({
     <div className="flex flex-col h-full">
       {/* Заголовок с названием региона */}
       {region && (
-        <div className="mb-4 pb-4 border-b border-slate-100">
-          <h3 className="font-bold text-slate-900 text-lg">{region.name}</h3>
-          <p className="text-xs text-slate-400 uppercase tracking-wider mt-1">
+        <div className="mb-3 pb-3 border-b border-slate-100 flex items-baseline justify-between gap-2">
+          <h3 className="font-bold text-slate-900 text-base leading-tight">{region.name}</h3>
+          <span className="text-xs text-slate-400 uppercase tracking-wider flex-shrink-0">
             {region.info}
-          </p>
+          </span>
         </div>
       )}
 
       {/* Список представителей */}
       {repsInRegion.length > 0 ? (
-        <div className="flex flex-col gap-4 overflow-y-auto flex-1">
+        <div className="flex flex-col gap-4 overflow-y-auto flex-1 min-h-0 pr-2 -mr-2">
           {repsInRegion.map(rep => (
             <RepresentativeCard key={rep.id} representative={rep} />
           ))}
