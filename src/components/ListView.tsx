@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import type { Representative } from '../types';
 import { RUSSIA_REGIONS, FEDERAL_DISTRICTS } from '../constants';
+import { CITY_TO_REGION } from '../cityMapping';
 import RepresentativeCard from './RepresentativeCard';
 
 interface ListViewProps {
@@ -13,7 +14,13 @@ const ListView: React.FC<ListViewProps> = ({ representatives }) => {
   const filtered = useMemo(() => {
     if (!searchQuery.trim()) return representatives;
 
-    const query = searchQuery.toLowerCase();
+    const query = searchQuery.trim().toLowerCase();
+
+    // Предвычисляем совпадения по городам (зависит только от query)
+    const matchedCityRegionIds = Object.entries(CITY_TO_REGION)
+      .filter(([cityName]) => cityName.includes(query))
+      .map(([, regionId]) => regionId);
+
     return representatives.filter(rep => {
       // Поиск по имени, email, телефону
       if (rep.name?.toLowerCase().includes(query) ||
@@ -71,6 +78,27 @@ const ListView: React.FC<ListViewProps> = ({ representatives }) => {
         return true;
       }
 
+      // Поиск по названиям городов
+      if (matchedCityRegionIds.length > 0) {
+        if (regionIds.some(id => {
+          // Прямое совпадение: регион представителя совпадает с регионом города
+          if (matchedCityRegionIds.includes(id)) return true;
+
+          // Представитель назначен на округ, который содержит регион города
+          const district = FEDERAL_DISTRICTS.find(d => d.id === id);
+          if (district) {
+            return matchedCityRegionIds.some(cityRegionId => {
+              const cityRegion = RUSSIA_REGIONS.find(r => r.id === cityRegionId);
+              return cityRegion && cityRegion.info === district.id;
+            });
+          }
+
+          return false;
+        })) {
+          return true;
+        }
+      }
+
       return false;
     });
   }, [representatives, searchQuery]);
@@ -80,7 +108,7 @@ const ListView: React.FC<ListViewProps> = ({ representatives }) => {
       {/* Поле поиска */}
       <input
         type="text"
-        placeholder="Поиск по имени, региону, округу..."
+        placeholder="Поиск по имени, городу, региону, округу..."
         value={searchQuery}
         onChange={e => setSearchQuery(e.target.value)}
         className="w-full px-4 md:px-6 py-3 md:py-4 border border-slate-200 rounded-xl md:rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-300 focus:border-transparent transition-all"

@@ -56,7 +56,21 @@ const App: React.FC = () => {
 
         // Загрузка представителей из Битрикс или mock
         if (window.bitrixMapData && Array.isArray(window.bitrixMapData)) {
-          setRepresentatives(window.bitrixMapData);
+          // Дедупликация: Битрикс может отдавать одного представителя несколькими записями
+          // с разными regionId. Объединяем их в одну запись с массивом regionId.
+          const merged = new Map<number, Representative>();
+          for (const rep of window.bitrixMapData) {
+            const existing = merged.get(rep.id);
+            if (existing) {
+              const existingIds = Array.isArray(existing.regionId) ? existing.regionId : [existing.regionId];
+              const newIds = Array.isArray(rep.regionId) ? rep.regionId : [rep.regionId];
+              const allIds = [...new Set([...existingIds, ...newIds].filter(Boolean))];
+              existing.regionId = allIds.length === 1 ? allIds[0] : allIds;
+            } else {
+              merged.set(rep.id, { ...rep });
+            }
+          }
+          setRepresentatives(Array.from(merged.values()));
         } else {
           // Используем mock данные для разработки
           setRepresentatives(getMockRepresentatives());
