@@ -95,6 +95,10 @@ const App: React.FC = () => {
           <ViewToggle mode={viewMode} onChange={setViewMode} />
         </div>
 
+        <p className="text-xs text-slate-500 mb-4 md:mb-6">
+          При выборе представителя, пожалуйста, ориентируйтесь на регион установки или поставки медицинского изделия
+        </p>
+
         {/* Основной контент */}
         {viewMode === 'map' ? (
           <div className="flex flex-col md:flex-row gap-4 md:gap-6 md:h-[600px]">

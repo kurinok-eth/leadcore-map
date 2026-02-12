@@ -66,7 +66,7 @@ const RepresentativeCard: React.FC<RepresentativeCardProps> = ({ representative:
       </div>
 
       {/* Направления (теги) */}
-      {showRegion && rep.activity && rep.activity.length > 0 && (
+      {rep.activity && rep.activity.length > 0 && (
         <div className="flex flex-wrap gap-1 mt-2 md:mt-3">
           {rep.activity.map((act, idx) => (
             <span
