@@ -85,6 +85,53 @@
   box-sizing: border-box;
 }
 
+/* Мини-Preflight для компонента. Так как мы отключили глобальный 
+   Tailwind Preflight, чтобы не сломать сайт, нам нужно сбросить 
+   базовые стили для нужных нам тегов локально */
+#russia-map-root button,
+#russia-map-root input,
+#russia-map-root select,
+#russia-map-root textarea {
+  font-family: inherit;
+  font-size: 100%;
+  font-weight: inherit;
+  line-height: inherit;
+  color: inherit;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  outline: none;
+}
+
+#russia-map-root button {
+  cursor: pointer;
+}
+
+#russia-map-root ul,
+#russia-map-root ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+#russia-map-root h1,
+#russia-map-root h2,
+#russia-map-root h3,
+#russia-map-root h4,
+#russia-map-root h5,
+#russia-map-root h6,
+#russia-map-root p {
+  margin: 0;
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+#russia-map-root a {
+  color: inherit;
+  text-decoration: none;
+}
+
 /* Плавные анимации для SVG */
 #russia-map-root svg path,
 #russia-map-root svg circle {
