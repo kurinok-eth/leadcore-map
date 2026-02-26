@@ -1,13 +1,140 @@
-@import "tailwindcss";
+/* ============================================================
+   ВСТРАИВАЕМЫЙ КОМПОНЕНТ — ПОЛНАЯ ИЗОЛЯЦИЯ CSS
+   
+   @import утилит идёт первым (требование CSS),
+   @reference даёт компилятору доступ к теме без вывода CSS.
+   Все переменные определены ТОЛЬКО на #russia-map-root.
+   ============================================================ */
+@import "tailwindcss/utilities.css";
+@reference "tailwindcss/theme.css";
 
-/* Кастомные стили */
-html {
+/* Все CSS-переменные Tailwind определяем ТОЛЬКО внутри компонента */
+#russia-map-root {
+  /* Шрифт */
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  line-height: 1.5;
+
+  /* Theme — цвета */
+  --color-red-500: oklch(63.7% 0.237 25.331);
+  --color-green-500: oklch(72.3% 0.219 149.579);
+  --color-slate-50: oklch(98.4% 0.003 247.858);
+  --color-slate-100: oklch(96.8% 0.007 247.896);
+  --color-slate-200: oklch(92.9% 0.013 255.508);
+  --color-slate-300: oklch(86.9% 0.022 252.894);
+  --color-slate-400: oklch(70.4% 0.04 256.788);
+  --color-slate-500: oklch(55.4% 0.046 257.417);
+  --color-slate-600: oklch(44.6% 0.043 257.281);
+  --color-slate-700: oklch(37.2% 0.044 257.287);
+  --color-slate-900: oklch(20.8% 0.042 265.755);
+  --color-white: #fff;
+
+  /* Theme — размеры и отступы */
+  --spacing: 0.25rem;
+  --container-7xl: 80rem;
+
+  /* Theme — типографика */
+  --text-xs: 0.75rem;
+  --text-xs--line-height: calc(1 / 0.75);
+  --text-sm: 0.875rem;
+  --text-sm--line-height: calc(1.25 / 0.875);
+  --text-base: 1rem;
+  --text-base--line-height: 1.5;
+  --text-lg: 1.125rem;
+  --text-lg--line-height: calc(1.75 / 1.125);
+  --text-xl: 1.25rem;
+  --text-xl--line-height: calc(1.75 / 1.25);
+  --text-3xl: 1.875rem;
+  --text-3xl--line-height: 1.2;
+  --text-4xl: 2.25rem;
+  --text-4xl--line-height: calc(2.5 / 2.25);
+
+  /* Theme — font weights */
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-weight-black: 900;
+
+  /* Theme — letter-spacing */
+  --tracking-wide: 0.025em;
+  --tracking-wider: 0.05em;
+
+  /* Theme — line-height */
+  --leading-tight: 1.25;
+  --leading-relaxed: 1.625;
+
+  /* Theme — border-radius */
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  --radius-2xl: 1rem;
+  --radius-3xl: 1.5rem;
+
+  /* Theme — анимации */
+  --animate-pulse: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+
+  /* Theme — blur */
+  --blur-sm: 8px;
+
+  /* Theme — transitions */
+  --default-transition-duration: 150ms;
+  --default-transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* box-sizing только внутри компонента */
+#russia-map-root *,
+#russia-map-root *::before,
+#russia-map-root *::after {
+  box-sizing: border-box;
+}
+
+/* Мини-Preflight для компонента. Так как мы отключили глобальный 
+   Tailwind Preflight, чтобы не сломать сайт, нам нужно сбросить 
+   базовые стили для нужных нам тегов локально */
+#russia-map-root button,
+#russia-map-root input,
+#russia-map-root select,
+#russia-map-root textarea {
+  font-family: inherit;
+  font-size: 100%;
+  font-weight: inherit;
+  line-height: inherit;
+  color: inherit;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  outline: none;
+}
+
+#russia-map-root button {
+  cursor: pointer;
+}
+
+#russia-map-root ul,
+#russia-map-root ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+#russia-map-root h1,
+#russia-map-root h2,
+#russia-map-root h3,
+#russia-map-root h4,
+#russia-map-root h5,
+#russia-map-root h6,
+#russia-map-root p {
+  margin: 0;
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+#russia-map-root a {
+  color: inherit;
+  text-decoration: none;
 }
 
 /* Плавные анимации для SVG */
-svg path,
-svg circle {
+#russia-map-root svg path,
+#russia-map-root svg circle {
   transition: fill 0.2s ease, stroke 0.2s ease;
 }
 
@@ -23,19 +150,25 @@ svg circle {
 }
 
 /* Скрыть скроллбар но оставить возможность скролла */
-.overflow-y-auto::-webkit-scrollbar {
+#russia-map-root .overflow-y-auto::-webkit-scrollbar {
   width: 6px;
 }
 
-.overflow-y-auto::-webkit-scrollbar-track {
+#russia-map-root .overflow-y-auto::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.overflow-y-auto::-webkit-scrollbar-thumb {
+#russia-map-root .overflow-y-auto::-webkit-scrollbar-thumb {
   background: #e2e8f0;
   border-radius: 3px;
 }
 
-.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+#russia-map-root .overflow-y-auto::-webkit-scrollbar-thumb:hover {
   background: #cbd5e1;
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.5;
+  }
 }

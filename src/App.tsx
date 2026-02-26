@@ -181,7 +181,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F5F7FA] p-4 md:p-6">
+    <div className="w-full bg-[#F5F7FA] p-4 md:p-6">
       <div className="max-w-7xl mx-auto">
         {/* Заголовок */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4 md:mb-6">
@@ -189,12 +189,12 @@ const App: React.FC = () => {
             <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm border border-slate-100">
               <LocationIcon />
             </div>
-            <h1 className="text-lg md:text-xl font-bold text-slate-900">Наши представители</h1>
+            <h1 className="text-3xl md:text-4xl font-bold text-slate-900">Наши представители</h1>
           </div>
           <ViewToggle mode={viewMode} onChange={setViewMode} />
         </div>
 
-        <p className="text-xs text-slate-500 mb-4 md:mb-6">
+        <p className="text-sm text-slate-500 mb-4 md:mb-6">
           При выборе представителя, пожалуйста, ориентируйтесь на регион установки или поставки медицинского изделия
         </p>
 
