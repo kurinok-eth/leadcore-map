@@ -55,9 +55,9 @@ const RepresentativeCard: React.FC<RepresentativeCardProps> = ({ representative:
             {rep.phone}
           </a>
         )}
-        {rep.email && (
+        {rep.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(rep.email) && (
           <a
-            href={`mailto:${rep.email}`}
+            href={`mailto:${encodeURIComponent(rep.email)}`}
             className="block text-slate-500 hover:text-slate-900 active:text-slate-900 transition-colors break-all text-xs md:text-sm"
           >
             {rep.email}

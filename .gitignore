@@ -3,3 +3,5 @@ dist/
 *.geojson
 !public/*.geojson
 .env
+.claude/
+.vscode/

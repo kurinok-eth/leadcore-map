@@ -60,7 +60,10 @@ declare global {
   interface Window {
     bitrixMapData?: Representative[];
     bitrixMapConfig?: {
+      /** ТОЛЬКО для UI-подсказок, НЕ для авторизации! Легко подделать через DevTools. */
       isAdmin: boolean;
+      /** CSRF-токен Битрикс для серверных действий */
+      sessid?: string;
     };
   }
 }

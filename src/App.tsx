@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { ViewMode, Representative, GeoJSON } from './types';
 import { getMockRepresentatives } from './utils';
+import { RUSSIA_REGIONS, FEDERAL_DISTRICTS } from './constants';
 import {
   RussiaMap,
   ViewToggle,
@@ -25,6 +26,60 @@ const LocationIcon: React.FC = () => (
   </svg>
 );
 
+// Множество валидных regionId для проверки (исправление #6)
+const VALID_IDS = new Set([
+  ...RUSSIA_REGIONS.map(r => r.id),
+  ...FEDERAL_DISTRICTS.map(d => d.id),
+]);
+
+// Парсинг regionId из Битрикс: может быть строкой "ЦФО;RU-AMU" или массивом
+function parseRegionIds(value: string | string[] | undefined): string[] {
+  if (!value) return [];
+  const raw = Array.isArray(value)
+    ? value.flatMap(v => v.split(/[;,\n]/).map(s => s.trim())).filter(Boolean)
+    : value.split(/[;,\n]/).map(s => s.trim()).filter(Boolean);
+
+  // Предупреждение о неизвестных regionId (исправление #6)
+  const invalid = raw.filter(id => !VALID_IDS.has(id));
+  if (invalid.length > 0) {
+    console.warn('Неизвестные regionId:', invalid);
+  }
+
+  return raw;
+}
+
+// Рантайм-валидатор структуры Representative (исправление #3)
+function validateRepresentative(raw: unknown): Representative | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const obj = raw as Record<string, unknown>;
+
+  if (typeof obj.id !== 'number' || !Number.isFinite(obj.id)) return null;
+  if (typeof obj.name !== 'string' || obj.name.length === 0) return null;
+  if (typeof obj.position !== 'string') return null;
+  if (typeof obj.phone !== 'string') return null;
+  if (typeof obj.email !== 'string') return null;
+
+  // Валидация regionId
+  const regionId = obj.regionId;
+  if (typeof regionId !== 'string' && !Array.isArray(regionId)) return null;
+  if (Array.isArray(regionId) && !regionId.every(v => typeof v === 'string')) return null;
+
+  return {
+    id: obj.id,
+    name: String(obj.name).slice(0, 200),
+    position: String(obj.position).slice(0, 200),
+    phone: String(obj.phone).slice(0, 50),
+    email: String(obj.email).slice(0, 100),
+    regionId: regionId as string | string[],
+    activity: Array.isArray(obj.activity)
+      ? (obj.activity as string[]).filter(a => typeof a === 'string').map(a => a.slice(0, 100))
+      : undefined,
+    workingHours: typeof obj.workingHours === 'string'
+      ? obj.workingHours.slice(0, 200)
+      : undefined,
+  } as Representative;
+}
+
 // Определяем начальный режим просмотра на основе ширины экрана
 const getInitialViewMode = (): ViewMode => {
   if (typeof window === 'undefined') return 'map';
@@ -46,8 +101,25 @@ const App: React.FC = () => {
       setError(null);
 
       try {
-        // Загрузка GeoJSON
-        const geoJsonResponse = await fetch('/local/components/custom/russia.map/templates/.default/russia-regions.geojson');
+        // Загрузка GeoJSON с таймаутом 15с (исправление #11)
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 15000);
+
+        let geoJsonResponse: Response;
+        try {
+          geoJsonResponse = await fetch(
+            '/local/components/custom/russia.map/templates/.default/russia-regions.geojson',
+            { signal: controller.signal }
+          );
+          clearTimeout(timeout);
+        } catch (fetchErr) {
+          clearTimeout(timeout);
+          if (fetchErr instanceof DOMException && fetchErr.name === 'AbortError') {
+            throw new Error('Таймаут загрузки геометрии регионов');
+          }
+          throw fetchErr;
+        }
+
         if (!geoJsonResponse.ok) {
           throw new Error('Не удалось загрузить геометрию регионов');
         }
@@ -56,18 +128,30 @@ const App: React.FC = () => {
 
         // Загрузка представителей из Битрикс или mock
         if (window.bitrixMapData && Array.isArray(window.bitrixMapData)) {
+          // Рантайм-валидация входных данных (исправление #3)
+          const validated = window.bitrixMapData
+            .map(validateRepresentative)
+            .filter((r): r is Representative => r !== null);
+
+          if (validated.length !== window.bitrixMapData.length) {
+            console.warn(
+              `Отфильтровано ${window.bitrixMapData.length - validated.length} невалидных записей представителей`
+            );
+          }
+
           // Дедупликация: Битрикс может отдавать одного представителя несколькими записями
           // с разными regionId. Объединяем их в одну запись с массивом regionId.
           const merged = new Map<number, Representative>();
-          for (const rep of window.bitrixMapData) {
+          for (const rep of validated) {
             const existing = merged.get(rep.id);
             if (existing) {
-              const existingIds = Array.isArray(existing.regionId) ? existing.regionId : [existing.regionId];
-              const newIds = Array.isArray(rep.regionId) ? rep.regionId : [rep.regionId];
-              const allIds = [...new Set([...existingIds, ...newIds].filter(Boolean))];
+              const existingIds = parseRegionIds(existing.regionId);
+              const newIds = parseRegionIds(rep.regionId);
+              const allIds = [...new Set([...existingIds, ...newIds])];
               existing.regionId = allIds.length === 1 ? allIds[0] : allIds;
             } else {
-              merged.set(rep.id, { ...rep });
+              const parsedIds = parseRegionIds(rep.regionId);
+              merged.set(rep.id, { ...rep, regionId: parsedIds.length === 1 ? parsedIds[0] : parsedIds });
             }
           }
           setRepresentatives(Array.from(merged.values()));
@@ -76,7 +160,8 @@ const App: React.FC = () => {
           setRepresentatives(getMockRepresentatives());
         }
       } catch (err) {
-        console.error('Error loading data:', err);
+        // Маскировка внутренних ошибок (исправление #12)
+        console.error('Error loading data:', err instanceof Error ? err.message : 'Unknown error');
         setError(
           err instanceof Error
             ? err.message
